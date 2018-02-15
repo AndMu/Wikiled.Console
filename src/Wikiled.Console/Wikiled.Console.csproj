@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <Authors>Wikiled</Authors>
+    <Description>Console Shared Library</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <ProjectUrl>https://github.com/AndMu/Wikiled.Console</ProjectUrl>
+    <tags>console, arguments, parser, standard</tags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+    <PackageReference Include="System.Console" Version="4.3.0" />
+  </ItemGroup>
+  
+</Project>
