@@ -1,2 +1,2 @@
-# Wikiled.Common
-Helper methods shared across many libraries
+# Wikiled.Console
+Helper methods for console applications
