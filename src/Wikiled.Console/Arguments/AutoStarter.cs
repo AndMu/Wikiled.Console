@@ -58,7 +58,7 @@ namespace Wikiled.Console.Arguments
 
         private static IEnumerable<T> GetInstances<T>()
         {
-            return (from t in Assembly.GetExecutingAssembly().GetTypes()
+            return (from t in Assembly.GetEntryAssembly().GetTypes()
                     where t.IsSubclassOf(typeof(T)) && t.GetConstructor(Type.EmptyTypes) != null
                     select (T)Activator.CreateInstance(t));
         }
