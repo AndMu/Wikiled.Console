@@ -11,10 +11,19 @@ namespace Wikiled.Console.Arguments
     {
         private static Logger log = LogManager.GetCurrentClassLogger();
 
+        private readonly Dictionary<string, Command> commands;
+
         public AutoStarter(string name)
         {
             Guard.NotNullOrEmpty(() => name, name);
             Name = name;
+            List<Command> commandsList = new List<Command>();
+            foreach (var instance in GetInstances<Command>())
+            {
+                commandsList.Add(instance);
+            }
+
+            commands = commandsList.ToDictionary(item => item.Name, item => item, StringComparer.OrdinalIgnoreCase);
         }
 
         public string Name { get; }
@@ -28,17 +37,10 @@ namespace Wikiled.Console.Arguments
                 return;
             }
 
-            List<Command> commandsList = new List<Command>();
-            foreach (var instance in GetInstances<Command>())
-            {
-                commandsList.Add(instance);
-            }
-            
-            var commands = commandsList.ToDictionary(item => item.Name, item => item, StringComparer.OrdinalIgnoreCase);
             if (args.Length == 0 ||
                 !commands.TryGetValue(args[0], out var command))
             {
-                log.Error("Please specify argumets");
+                log.Error("Please specify command");
                 return;
             }
 
@@ -57,8 +59,8 @@ namespace Wikiled.Console.Arguments
         private static IEnumerable<T> GetInstances<T>()
         {
             return (from t in Assembly.GetExecutingAssembly().GetTypes()
-                    where t.IsAssignableFrom(typeof(T)) && t.GetConstructor(Type.EmptyTypes) != null
-                    select (T)Activator.CreateInstance(t)); 
+                    where t.IsSubclassOf(typeof(T)) && t.GetConstructor(Type.EmptyTypes) != null
+                    select (T)Activator.CreateInstance(t));
         }
     }
 }
