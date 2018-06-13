@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Wikiled.Console.Arguments
 {
@@ -65,6 +66,6 @@ namespace Wikiled.Console.Arguments
         /// <summary>
         /// Executes the command.
         /// </summary>
-        public abstract void Execute();
+        public abstract Task Execute();
     }
 }

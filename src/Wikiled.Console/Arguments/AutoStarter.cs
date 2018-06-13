@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using NLog;
 using Wikiled.Common.Arguments;
 
@@ -28,7 +29,7 @@ namespace Wikiled.Console.Arguments
 
         public string Name { get; }
 
-        public void Start(string[] args)
+        public async Task Start(string[] args)
         {
             log.Info("Starting {0} version {1}...", Assembly.GetExecutingAssembly().GetName().Version, Name);
             if (args.Length == 0)
@@ -47,7 +48,7 @@ namespace Wikiled.Console.Arguments
             try
             {
                 command.ParseArguments(args.Skip(1));
-                command.Execute();
+                await command.Execute();
             }
             catch (Exception ex)
             {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Wikiled.Console.Helpers
+namespace Wikiled.Console.HelperMethods
 {
     public static class NativeMethods
     {
