@@ -31,7 +31,7 @@ namespace Wikiled.Console.Arguments
 
         public async Task Start(string[] args)
         {
-            log.Info("Starting {0} version {1}...", Assembly.GetExecutingAssembly().GetName().Version, Name);
+            log.Info("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
             if (args.Length == 0)
             {
                 log.Warn("Please specify arguments");
