@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Wikiled.Console.Arguments
@@ -6,40 +7,6 @@ namespace Wikiled.Console.Arguments
     /// <summary>
     /// Provides a base class for the functionality that all commands must implement.
     /// </summary>
-    /// 
-    /// <example>
-    /// The following example shows parsing of a command-line such as "Test.exe RUN /verbose /runId=10"
-    /// into a strongly-typed Command, that can then be excuted.
-    /// <code>
-    /// using System;
-    /// using System.Linq;
-    /// using Microsoft.Test.CommandLineParsing;
-    /// 
-    /// public class RunCommand : Command
-    /// {
-    ///     public bool? Verbose { get; set; }
-    ///     public int? RunId { get; set; }
-    ///
-    ///     public override void Execute()
-    ///     {
-    ///         Console.WriteLine("RunCommand: Verbose={0} RunId={1}", Verbose, RunId);  
-    ///     }
-    /// }
-    ///
-    /// public class Program
-    /// {
-    ///     public static void Main(string[] args)
-    ///     {
-    ///         if (String.Compare(args[0], "run", StringComparison.InvariantCultureIgnoreCase) == 0)
-    ///         {
-    ///             Command c = new RunCommand();
-    ///             c.ParseArguments(args.Skip(1)); // or CommandLineParser.ParseArguments(c, args.Skip(1))
-    ///             c.Execute();
-    ///         }
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
     public abstract class Command
     {
         /// <summary>
@@ -63,9 +30,16 @@ namespace Wikiled.Console.Arguments
             }
         }
 
-        /// <summary>
-        /// Executes the command.
-        /// </summary>
-        public abstract Task Execute();
+        public virtual Task StartExecution(CancellationToken token)
+        {
+            return Execute(token);
+        }
+
+        public virtual Task StopExecution(CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+
+        protected abstract Task Execute(CancellationToken token);
     }
 }

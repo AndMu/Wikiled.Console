@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Wikiled.Common.Arguments;
@@ -15,6 +16,8 @@ namespace Wikiled.Console.Arguments
         private readonly Dictionary<string, Command> commands;
 
         private readonly string[] args;
+
+        private Command command = default;
 
         public AutoStarter(string name, string[] args)
         {
@@ -33,7 +36,7 @@ namespace Wikiled.Console.Arguments
 
         public string Name { get; }
 
-        public async Task Start()
+        public async Task Start(CancellationToken token)
         {
             log.Info("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
             if (args.Length == 0)
@@ -43,7 +46,7 @@ namespace Wikiled.Console.Arguments
             }
 
             if (args.Length == 0 ||
-                !commands.TryGetValue(args[0], out var command))
+                !commands.TryGetValue(args[0], out command))
             {
                 log.Error("Please specify command");
                 return;
@@ -52,12 +55,20 @@ namespace Wikiled.Console.Arguments
             try
             {
                 command.ParseArguments(args.Skip(1));
-                await command.Execute();
+                await command.StartExecution(token);
             }
             catch (Exception ex)
             {
                 log.Error(ex);
-                System.Console.ReadLine();
+            }
+        }
+
+        public async Task Stop(CancellationToken token)
+        {
+            log.Info("Request stopping");
+            if (command != null)
+            {
+                await command.StopExecution(token);
             }
         }
 

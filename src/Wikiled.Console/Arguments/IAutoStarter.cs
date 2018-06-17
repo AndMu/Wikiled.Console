@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Wikiled.Console.Arguments
 {
@@ -6,6 +7,8 @@ namespace Wikiled.Console.Arguments
     {
         string Name { get; }
 
-        Task Start();
+        Task Start(CancellationToken token);
+
+        Task Stop(CancellationToken token);
     }
 }
