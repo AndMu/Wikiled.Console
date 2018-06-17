@@ -8,16 +8,20 @@ using Wikiled.Common.Arguments;
 
 namespace Wikiled.Console.Arguments
 {
-    public class AutoStarter
+    public class AutoStarter : IAutoStarter
     {
         private static Logger log = LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<string, Command> commands;
 
-        public AutoStarter(string name)
+        private readonly string[] args;
+
+        public AutoStarter(string name, string[] args)
         {
             Guard.NotNullOrEmpty(() => name, name);
+            Guard.NotNull(() => args, args);
             Name = name;
+            this.args = args;
             List<Command> commandsList = new List<Command>();
             foreach (var instance in GetInstances<Command>())
             {
@@ -29,7 +33,7 @@ namespace Wikiled.Console.Arguments
 
         public string Name { get; }
 
-        public async Task Start(string[] args)
+        public async Task Start()
         {
             log.Info("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
             if (args.Length == 0)
