@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
-using Wikiled.Common.Arguments;
 
 namespace Wikiled.Console.Arguments
 {
@@ -21,10 +20,13 @@ namespace Wikiled.Console.Arguments
 
         public AutoStarter(string name, string[] args)
         {
-            Guard.NotNullOrEmpty(() => name, name);
-            Guard.NotNull(() => args, args);
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+            }
+
             Name = name;
-            this.args = args;
+            this.args = args ?? throw new ArgumentNullException(nameof(args));
             List<Command> commandsList = new List<Command>();
             foreach (var instance in GetInstances<Command>())
             {
