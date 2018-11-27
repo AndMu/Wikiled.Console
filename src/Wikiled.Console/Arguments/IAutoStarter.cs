@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Autofac;
 
 namespace Wikiled.Console.Arguments
 {
@@ -7,7 +8,12 @@ namespace Wikiled.Console.Arguments
     {
         string Name { get; }
 
-        Task Start(CancellationToken token);
+        IAutoStarter Register<T>(string name)
+            where T : Command;
+
+        IAutoStarter RegisterModule(Module module);
+
+        Task Start(string[] args, CancellationToken token);
 
         Task Stop(CancellationToken token);
     }

@@ -1,84 +1,90 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using NLog;
+using Autofac;
+using Module = Autofac.Module;
 
 namespace Wikiled.Console.Arguments
 {
     public class AutoStarter : IAutoStarter
     {
-        private static Logger log = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<AutoStarter> log;
 
-        private readonly Dictionary<string, Command> commands;
+        private Command command;
 
-        private readonly string[] args;
+        private readonly ContainerBuilder builder = new ContainerBuilder();
 
-        private Command command = default;
-
-        public AutoStarter(string name, string[] args)
+        public AutoStarter(ILoggerFactory factory, string name)
         {
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
             if (string.IsNullOrEmpty(name))
             {
                 throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             }
 
+            builder.RegisterInstance(factory);
             Name = name;
-            this.args = args ?? throw new ArgumentNullException(nameof(args));
-            List<Command> commandsList = new List<Command>();
-            foreach (var instance in GetInstances<Command>())
-            {
-                commandsList.Add(instance);
-            }
-
-            commands = commandsList.ToDictionary(item => item.Name, item => item, StringComparer.OrdinalIgnoreCase);
+            log = factory.CreateLogger<AutoStarter>();
         }
 
         public string Name { get; }
 
-        public async Task Start(CancellationToken token)
+        public IAutoStarter Register<T>(string name)
+            where T : Command
         {
-            log.Info("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
+            builder.RegisterType<T>().Named<Command>(name);
+            return this;
+        }
+
+        public IAutoStarter RegisterModule(Module module)
+        {
+            builder.RegisterModule(module);
+            return this;
+        }
+
+        public async Task Start(string[] args, CancellationToken token)
+        {
+            var container = builder.Build();
+            log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
             if (args.Length == 0)
             {
-                log.Warn("Please specify arguments");
+                log.LogWarning("Please specify arguments");
                 return;
             }
 
-            if (args.Length == 0 ||
-                !commands.TryGetValue(args[0], out command))
+            if (args.Length == 0)
             {
-                log.Error("Please specify command");
+                log.LogError("Please specify command");
                 return;
             }
 
             try
             {
+                command = container.ResolveNamed<Command>(args[0]);
                 command.ParseArguments(args.Skip(1));
                 await command.StartExecution(token);
             }
             catch (Exception ex)
             {
-                log.Error(ex);
+                log.LogError(ex, "Error");
             }
         }
 
         public async Task Stop(CancellationToken token)
         {
-            log.Info("Request stopping");
+            log.LogInformation("Request stopping");
             if (command != null)
             {
                 await command.StopExecution(token);
             }
-        }
-
-        private static IEnumerable<T> GetInstances<T>()
-        {
-            return (from t in Assembly.GetEntryAssembly().GetTypes()
-                    where t.IsSubclassOf(typeof(T)) && t.GetConstructor(Type.EmptyTypes) != null
-                    select (T)Activator.CreateInstance(t));
         }
     }
 }
