@@ -1,13 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Wikiled.Console.Arguments
 {
@@ -19,23 +19,19 @@ namespace Wikiled.Console.Arguments
 
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
-        public AutoStarter(ILoggerFactory factory, string name)
+        public AutoStarter(string name)
         {
-            if (factory == null)
-            {
-                throw new ArgumentNullException(nameof(factory));
-            }
-
             if (string.IsNullOrEmpty(name))
             {
                 throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             }
 
-            builder.RegisterInstance(factory);
             IServiceCollection services = new ServiceCollection();
-            services.AddLogging(); 
-            builder.Populate(services); 
-
+            services.AddLogging(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Trace);
+            });
+            builder.Populate(services);
             Name = name;
             log = factory.CreateLogger<AutoStarter>();
         }
@@ -69,7 +65,7 @@ namespace Wikiled.Console.Arguments
             }
 
             if (args.Length == 0 ||
-                !configs.TryGetValue(args[0], out var config))
+                !configs.TryGetValue(args[0], out ICommandConfig config))
             {
                 log.LogError("Please specify command");
                 return;
@@ -80,7 +76,7 @@ namespace Wikiled.Console.Arguments
                 config.ParseArguments(args.Skip(1));
                 config.Build(builder);
                 builder.RegisterInstance(config).As(config.GetType());
-                using (var container = builder.Build())
+                using (IContainer container = builder.Build())
                 {
                     Command = container.ResolveNamed<Command>(args[0]);
                     await Command.StartExecution(token);
