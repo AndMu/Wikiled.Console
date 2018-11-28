@@ -1,9 +1,5 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NUnit.Framework;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
@@ -34,13 +30,12 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(new NullLoggerFactory(), null));
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter(null, "Test"));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null));
         }
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter(new NullLoggerFactory(), "Test");
+            return new AutoStarter("Test");
         }
     }
 }

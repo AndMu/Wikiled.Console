@@ -19,22 +19,26 @@ namespace Wikiled.Console.Arguments
 
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
+        private readonly IServiceCollection services = new ServiceCollection();
+
         public AutoStarter(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             }
-
-            IServiceCollection services = new ServiceCollection();
+            
+            Name = name;
+            services.AddSingleton(Factory);
             services.AddLogging(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Trace);
             });
-            builder.Populate(services);
-            Name = name;
-            log = factory.CreateLogger<AutoStarter>();
+
+            log = Factory.CreateLogger<AutoStarter>();
         }
+
+        public ILoggerFactory Factory { get; } = new LoggerFactory();
 
         public Command Command { get; private set; }
 
@@ -74,6 +78,7 @@ namespace Wikiled.Console.Arguments
             try
             {
                 config.ParseArguments(args.Skip(1));
+                builder.Populate(services);
                 config.Build(builder);
                 builder.RegisterInstance(config).As(config.GetType());
                 using (IContainer container = builder.Build())
