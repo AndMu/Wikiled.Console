@@ -6,7 +6,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Module = Autofac.Module;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Wikiled.Console.Arguments
 {
@@ -14,9 +15,9 @@ namespace Wikiled.Console.Arguments
     {
         private readonly ILogger<AutoStarter> log;
 
-        private Command command;
-
         private readonly ContainerBuilder builder = new ContainerBuilder();
+
+        private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
         public AutoStarter(ILoggerFactory factory, string name)
         {
@@ -31,29 +32,30 @@ namespace Wikiled.Console.Arguments
             }
 
             builder.RegisterInstance(factory);
+            IServiceCollection services = new ServiceCollection();
+            services.AddLogging(); 
+            builder.Populate(services); 
+
             Name = name;
             log = factory.CreateLogger<AutoStarter>();
         }
 
+        public Command Command { get; private set; }
+
         public string Name { get; }
 
-        public IAutoStarter Register<T>(string name)
+        public IAutoStarter RegisterCommand<T, TConfig>(string name)
             where T : Command
+            where TConfig : ICommandConfig, new()
         {
             builder.RegisterType<T>().Named<Command>(name);
-            return this;
-        }
-
-        public IAutoStarter RegisterModule(Module module)
-        {
-            builder.RegisterModule(module);
+            configs[name] = new TConfig();
             return this;
         }
 
         public async Task Start(string[] args, CancellationToken token)
         {
-            var container = builder.Build();
-            log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly().GetName().Version, Name);
+            log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
             {
                 log.LogWarning("Please specify arguments");
@@ -66,11 +68,21 @@ namespace Wikiled.Console.Arguments
                 return;
             }
 
+            if (args.Length == 0 ||
+                !configs.TryGetValue(args[0], out var config))
+            {
+                log.LogError("Please specify command");
+                return;
+            }
+
             try
             {
-                command = container.ResolveNamed<Command>(args[0]);
-                command.ParseArguments(args.Skip(1));
-                await command.StartExecution(token);
+                config.ParseArguments(args.Skip(1));
+                config.Build(builder);
+                builder.RegisterInstance(config).As(config.GetType());
+                var container = builder.Build();
+                Command = container.ResolveNamed<Command>(args[0]);
+                await Command.StartExecution(token);
             }
             catch (Exception ex)
             {
@@ -81,9 +93,9 @@ namespace Wikiled.Console.Arguments
         public async Task Stop(CancellationToken token)
         {
             log.LogInformation("Request stopping");
-            if (command != null)
+            if (Command != null)
             {
-                await command.StopExecution(token);
+                await Command.StopExecution(token);
             }
         }
     }

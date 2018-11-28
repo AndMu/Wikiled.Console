@@ -101,9 +101,7 @@ namespace Wikiled.Console.Arguments
         public static void ParseArguments(this object valueToPopulate, IEnumerable<string> args)
         {
             CommandLineDictionary commandLineDictionary = CommandLineDictionary.FromArguments(args);
-
             PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(valueToPopulate);
-
             // Ensure required properties are specified.
             foreach (PropertyDescriptor property in properties)
             {

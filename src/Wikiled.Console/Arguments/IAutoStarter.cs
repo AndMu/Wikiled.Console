@@ -1,17 +1,16 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
 
 namespace Wikiled.Console.Arguments
 {
     public interface IAutoStarter
     {
         string Name { get; }
+        Command Command { get; }
 
-        IAutoStarter Register<T>(string name)
-            where T : Command;
-
-        IAutoStarter RegisterModule(Module module);
+        IAutoStarter RegisterCommand<T, TConfig>(string name)
+            where T : Command
+            where TConfig : ICommandConfig, new();
 
         Task Start(string[] args, CancellationToken token);
 
