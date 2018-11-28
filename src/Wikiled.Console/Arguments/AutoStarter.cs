@@ -80,9 +80,11 @@ namespace Wikiled.Console.Arguments
                 config.ParseArguments(args.Skip(1));
                 config.Build(builder);
                 builder.RegisterInstance(config).As(config.GetType());
-                var container = builder.Build();
-                Command = container.ResolveNamed<Command>(args[0]);
-                await Command.StartExecution(token);
+                using (var container = builder.Build())
+                {
+                    Command = container.ResolveNamed<Command>(args[0]);
+                    await Command.StartExecution(token);
+                }
             }
             catch (Exception ex)
             {
