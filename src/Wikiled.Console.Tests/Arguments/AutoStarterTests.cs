@@ -34,7 +34,7 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter(new NullLoggerFactory(), null));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(new NullLoggerFactory(), null));
             Assert.Throws<ArgumentNullException>(() => new AutoStarter(null, "Test"));
         }
 
