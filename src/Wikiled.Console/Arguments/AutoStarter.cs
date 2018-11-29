@@ -1,6 +1,4 @@
 ﻿using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Wikiled.Common.Utilities.Modules;
 
 namespace Wikiled.Console.Arguments
 {
@@ -19,8 +18,6 @@ namespace Wikiled.Console.Arguments
 
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
-        private readonly IServiceCollection services = new ServiceCollection();
-
         public AutoStarter(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -29,12 +26,6 @@ namespace Wikiled.Console.Arguments
             }
             
             Name = name;
-            services.AddSingleton(Factory);
-            services.AddLogging(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Trace);
-            });
-
             log = Factory.CreateLogger<AutoStarter>();
         }
 
@@ -78,7 +69,7 @@ namespace Wikiled.Console.Arguments
             try
             {
                 config.ParseArguments(args.Skip(1));
-                builder.Populate(services);
+                builder.RegisterModule(new LoggingModule(Factory));
                 config.Build(builder);
                 builder.RegisterInstance(config).As(config.GetType());
                 using (IContainer container = builder.Build())
