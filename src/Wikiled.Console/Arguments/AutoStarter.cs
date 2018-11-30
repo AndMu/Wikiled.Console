@@ -47,26 +47,26 @@ namespace Wikiled.Console.Arguments
             return this;
         }
 
-        public async Task StartAsync(CancellationToken token)
+        public Task StartAsync(CancellationToken token)
         {
             log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
             {
                 log.LogWarning("Please specify arguments");
-                return;
+                return Task.CompletedTask;
             }
 
             if (args.Length == 0)
             {
                 log.LogError("Please specify command");
-                return;
+                return Task.CompletedTask;
             }
 
             if (args.Length == 0 ||
                 !configs.TryGetValue(args[0], out ICommandConfig config))
             {
                 log.LogError("Please specify command");
-                return;
+                return Task.CompletedTask;
             }
 
             try
@@ -78,13 +78,15 @@ namespace Wikiled.Console.Arguments
                 using (IContainer container = builder.Build())
                 {
                     Command = container.ResolveNamed<Command>(args[0]);
-                    await Command.StartExecution(token);
+                    return Task.Run(() => Command.StartExecution(token), token);
                 }
             }
             catch (Exception ex)
             {
                 log.LogError(ex, "Error");
             }
+
+            return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken token)
