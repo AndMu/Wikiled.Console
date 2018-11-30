@@ -1,6 +1,6 @@
+using NUnit.Framework;
 using System;
 using System.Threading;
-using NUnit.Framework;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
@@ -22,20 +22,21 @@ namespace Wikiled.Console.Tests.Arguments
         {
             instance.RegisterCommand<SampleCommand, ConfigOne>("One");
             instance.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
-            instance.Start(new[] { "One", "-Data=Test"}, CancellationToken.None).ConfigureAwait(false);
-            var resultText = ((SampleCommand)instance.Command).Config.Data;
+            instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            string resultText = ((SampleCommand)instance.Command).Config.Data;
             Assert.AreEqual("Test", resultText);
         }
 
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(null));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null, new []{"Test"}));
+            Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null));
         }
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter("Test");
+            return new AutoStarter("Test", new[] { "One", "-Data=Test" });
         }
     }
 }

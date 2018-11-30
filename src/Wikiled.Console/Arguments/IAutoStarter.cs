@@ -1,19 +1,15 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Hosting;
 
 namespace Wikiled.Console.Arguments
 {
-    public interface IAutoStarter
+    public interface IAutoStarter : IHostedService
     {
         string Name { get; }
+
         Command Command { get; }
 
         IAutoStarter RegisterCommand<T, TConfig>(string name)
             where T : Command
             where TConfig : ICommandConfig, new();
-
-        Task Start(string[] args, CancellationToken token);
-
-        Task Stop(CancellationToken token);
     }
 }

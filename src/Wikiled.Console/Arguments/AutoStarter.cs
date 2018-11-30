@@ -18,7 +18,9 @@ namespace Wikiled.Console.Arguments
 
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
-        public AutoStarter(string name)
+        private string[] args;
+
+        public AutoStarter(string name, string[] args)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -26,6 +28,7 @@ namespace Wikiled.Console.Arguments
             }
             
             Name = name;
+            this.args = args ?? throw new ArgumentNullException(nameof(args));
             log = Factory.CreateLogger<AutoStarter>();
         }
 
@@ -44,7 +47,7 @@ namespace Wikiled.Console.Arguments
             return this;
         }
 
-        public async Task Start(string[] args, CancellationToken token)
+        public async Task StartAsync(CancellationToken token)
         {
             log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
@@ -84,7 +87,7 @@ namespace Wikiled.Console.Arguments
             }
         }
 
-        public async Task Stop(CancellationToken token)
+        public async Task StopAsync(CancellationToken token)
         {
             log.LogInformation("Request stopping");
             if (Command != null)
