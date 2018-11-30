@@ -42,7 +42,7 @@ namespace Wikiled.Console.Arguments
             where T : Command
             where TConfig : ICommandConfig, new()
         {
-            builder.RegisterType<T>().Named<Command>(name);
+            builder.RegisterType<T>().Named<Command>(name.ToLower());
             configs[name] = new TConfig();
             return this;
         }
@@ -63,7 +63,7 @@ namespace Wikiled.Console.Arguments
             }
 
             if (args.Length == 0 ||
-                !configs.TryGetValue(args[0], out ICommandConfig config))
+                !configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
             {
                 log.LogError("Please specify command");
                 return Task.CompletedTask;
