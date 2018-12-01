@@ -7,7 +7,7 @@ namespace Wikiled.Console.HelperMethods
     {
         public static void ForgetOrThrow(this Task task, ILogger logger)
         {
-            task.ContinueWith(t => { logger.LogError("Error", t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            task.ContinueWith(t => { logger.LogError(t.Exception, "Error"); }, TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }
