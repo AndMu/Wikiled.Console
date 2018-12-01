@@ -18,7 +18,9 @@ namespace Wikiled.Console.Arguments
 
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
-        private string[] args;
+        private readonly string[] args;
+
+        private IContainer container;
 
         public AutoStarter(string name, string[] args)
         {
@@ -26,7 +28,7 @@ namespace Wikiled.Console.Arguments
             {
                 throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             }
-            
+
             Name = name;
             this.args = args ?? throw new ArgumentNullException(nameof(args));
             log = Factory.CreateLogger<AutoStarter>();
@@ -62,31 +64,19 @@ namespace Wikiled.Console.Arguments
                 return Task.CompletedTask;
             }
 
-            if (args.Length == 0 ||
-                !configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
+            if (args.Length == 0 || !configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
             {
                 log.LogError("Please specify command");
                 return Task.CompletedTask;
             }
 
-            try
-            {
-                config.ParseArguments(args.Skip(1));
-                builder.RegisterModule(new LoggingModule(Factory));
-                config.Build(builder);
-                builder.RegisterInstance(config).As(config.GetType());
-                using (IContainer container = builder.Build())
-                {
-                    Command = container.ResolveNamed<Command>(args[0]);
-                    return Task.Run(() => Command.StartExecution(token), token);
-                }
-            }
-            catch (Exception ex)
-            {
-                log.LogError(ex, "Error");
-            }
-
-            return Task.CompletedTask;
+            config.ParseArguments(args.Skip(1));
+            builder.RegisterModule(new LoggingModule(Factory));
+            config.Build(builder);
+            builder.RegisterInstance(config).As(config.GetType());
+            container = builder.Build();
+            Command = container.ResolveNamed<Command>(args[0].ToLower());
+            return Task.Run(() => Command.StartExecution(token), token);
         }
 
         public async Task StopAsync(CancellationToken token)
@@ -96,6 +86,8 @@ namespace Wikiled.Console.Arguments
             {
                 await Command.StopExecution(token);
             }
+
+            container?.Dispose();
         }
     }
 }

@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
@@ -18,11 +19,11 @@ namespace Wikiled.Console.Tests.Arguments
         }
 
         [Test]
-        public void Acceptance()
+        public async Task Acceptance()
         {
             instance.RegisterCommand<SampleCommand, ConfigOne>("One");
             instance.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
-            instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
             string resultText = ((SampleCommand)instance.Command).Config.Data;
             Assert.AreEqual("Test", resultText);
         }
