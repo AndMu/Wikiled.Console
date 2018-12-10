@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Wikiled.Common.Logging;
 using Wikiled.Common.Utilities.Modules;
 
 namespace Wikiled.Console.Arguments
@@ -31,10 +32,8 @@ namespace Wikiled.Console.Arguments
 
             Name = name;
             this.args = args ?? throw new ArgumentNullException(nameof(args));
-            log = Factory.CreateLogger<AutoStarter>();
+            log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
         }
-
-        public ILoggerFactory Factory { get; } = new LoggerFactory();
 
         public Command Command { get; private set; }
 
@@ -71,7 +70,7 @@ namespace Wikiled.Console.Arguments
             }
 
             config.ParseArguments(args.Skip(1));
-            builder.RegisterModule(new LoggingModule(Factory));
+            builder.RegisterModule(new LoggingModule(ApplicationLogging.LoggerFactory));
             config.Build(builder);
             builder.RegisterInstance(config).As(config.GetType());
             container = builder.Build();
