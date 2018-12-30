@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +24,9 @@ namespace Wikiled.Console.Arguments
 
         private IContainer container;
 
-        public AutoStarter(string name, string[] args)
+        private readonly Subject<bool> status = new Subject<bool>();
+
+        public AutoStarter(ILoggerFactory factory, string name, string[] args)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -32,10 +35,15 @@ namespace Wikiled.Console.Arguments
 
             Name = name;
             this.args = args ?? throw new ArgumentNullException(nameof(args));
+            LoggerFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
         }
 
+        public ILoggerFactory LoggerFactory { get; }
+
         public Command Command { get; private set; }
+
+        public IObservable<bool> Status => status;
 
         public string Name { get; }
 
@@ -69,8 +77,9 @@ namespace Wikiled.Console.Arguments
                 return Task.CompletedTask;
             }
 
+            status.OnNext(true);
             config.ParseArguments(args.Skip(1));
-            builder.RegisterModule(new LoggingModule(ApplicationLogging.LoggerFactory));
+            builder.RegisterModule(new LoggingModule(LoggerFactory));
             config.Build(builder);
             builder.RegisterInstance(config).As(config.GetType());
             container = builder.Build();
@@ -81,11 +90,13 @@ namespace Wikiled.Console.Arguments
         public async Task StopAsync(CancellationToken token)
         {
             log.LogInformation("Request stopping");
+            status.OnNext(false);
             if (Command != null)
             {
                 await Command.StopExecution(token);
             }
 
+            status.OnCompleted();
             container?.Dispose();
         }
     }

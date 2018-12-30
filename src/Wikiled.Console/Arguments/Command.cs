@@ -20,7 +20,7 @@ namespace Wikiled.Console.Arguments
         {
             get
             {
-                string typeName = this.GetType().Name;
+                string typeName = GetType().Name;
                 if (typeName.Contains("Command"))
                 {
                     return typeName.Remove(typeName.LastIndexOf("Command", StringComparison.Ordinal));
