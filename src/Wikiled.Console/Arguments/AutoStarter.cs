@@ -71,9 +71,15 @@ namespace Wikiled.Console.Arguments
                 return Task.CompletedTask;
             }
 
-            if (args.Length == 0 || !configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
+            if (!configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
             {
-                log.LogError("Please specify command");
+                log.LogError("Unknown command: {0}", args[0]);
+                log.LogError("Supported:");
+                foreach (var commandConfig in configs)
+                {
+                    log.LogError(commandConfig.Key);
+                }
+
                 return Task.CompletedTask;
             }
 
