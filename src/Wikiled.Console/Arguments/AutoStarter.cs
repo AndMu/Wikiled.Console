@@ -90,7 +90,7 @@ namespace Wikiled.Console.Arguments
             builder.RegisterInstance(config).As(config.GetType());
             container = builder.Build();
             Command = container.ResolveNamed<Command>(args[0].ToLower());
-            return Task.Run(() => Command.StartExecution(token), token);
+            return Command.StartExecution(token);
         }
 
         public async Task StopAsync(CancellationToken token)

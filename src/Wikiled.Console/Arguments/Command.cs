@@ -9,6 +9,10 @@ namespace Wikiled.Console.Arguments
     /// </summary>
     public abstract class Command
     {
+        private readonly CancellationTokenSource executionToken = new CancellationTokenSource();
+
+        private Task executionTask;
+
         /// <summary>
         /// The name of the command. The base implementation is to strip off the last
         /// instance of "Command" from the end of the type name. So "DiscoverCommand"
@@ -32,12 +36,23 @@ namespace Wikiled.Console.Arguments
 
         public virtual Task StartExecution(CancellationToken token)
         {
-            return Execute(token);
+            executionTask = Task.Run(() => Execute(executionToken.Token), executionToken.Token);
+            return Task.CompletedTask;
         }
 
-        public virtual Task StopExecution(CancellationToken token)
+        public virtual async Task StopExecution(CancellationToken token)
         {
-            return Task.CompletedTask;
+            executionToken.Cancel();
+            try
+            {
+                if (executionTask != null)
+                {
+                    await executionTask.ConfigureAwait(false);
+                }
+            }
+            catch (OperationCanceledException e)
+            {
+            }
         }
 
         protected abstract Task Execute(CancellationToken token);

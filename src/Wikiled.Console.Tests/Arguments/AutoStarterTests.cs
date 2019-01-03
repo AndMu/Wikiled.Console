@@ -42,6 +42,18 @@ namespace Wikiled.Console.Tests.Arguments
         }
 
         [Test]
+        public async Task Blocking()
+        {
+            instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
+            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            var command = ((BlockingCommand)instance.Command);
+            string resultText = command.Config.Data;
+            Assert.AreEqual("Test", resultText);
+            await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.AreEqual(2, command.Stage);
+        }
+
+        [Test]
         public void Construct()
         {
             Assert.Throws<ArgumentException>(() => new AutoStarter(new NullLoggerFactory(), null, new []{"Test"}));
