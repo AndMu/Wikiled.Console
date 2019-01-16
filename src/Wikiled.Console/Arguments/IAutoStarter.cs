@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Wikiled.Console.Arguments
 {
-    public interface IAutoStarter : IHostedService
+    public interface IAutoStarter : IHostedService, IDisposable
     {
         string Name { get; }
 

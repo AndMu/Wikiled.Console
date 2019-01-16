@@ -42,10 +42,25 @@ namespace Wikiled.Console.Tests.Arguments
         }
 
         [Test]
+        public async Task AcceptanceCompleted()
+        {
+            instance.RegisterCommand<SampleCommandCompleted, ConfigOne>("One");
+            var observer = scheduler.CreateObserver<bool>();
+            scheduler.AdvanceBy(100);
+            instance.Status.Subscribe(observer);
+            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            await Task.Delay(500).ConfigureAwait(false);
+            scheduler.AdvanceBy(200);
+            await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            observer.Messages.AssertEqual(OnNext(100, true), OnNext(100, false), OnCompleted<bool>(100));
+        }
+
+        [Test]
         public async Task Blocking()
         {
             instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
             await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
+            await Task.Delay(500).ConfigureAwait(false);
             var command = ((BlockingCommand)instance.Command);
             string resultText = command.Config.Data;
             Assert.AreEqual("Test", resultText);

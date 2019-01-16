@@ -26,6 +26,12 @@ namespace Wikiled.Console.Arguments
 
         private readonly Subject<bool> status = new Subject<bool>();
 
+        private IDisposable commandStatus;
+
+        private bool isDisposed;
+
+        private bool isCompleted;
+
         public AutoStarter(ILoggerFactory factory, string name, string[] args)
         {
             if (string.IsNullOrEmpty(name))
@@ -83,27 +89,70 @@ namespace Wikiled.Console.Arguments
                 return Task.CompletedTask;
             }
 
-            status.OnNext(true);
+            OnStatus(true);
             config.ParseArguments(args.Skip(1));
             builder.RegisterModule(new LoggingModule(LoggerFactory));
             config.Build(builder);
             builder.RegisterInstance(config).As(config.GetType());
             container = builder.Build();
             Command = container.ResolveNamed<Command>(args[0].ToLower());
+            commandStatus = Command.Status.Subscribe(item =>
+            {
+                log.LogInformation(
+                    "Command completed: {0}",
+                    item ? "Successfully" : "Failed");
+                OnStatus(false);
+                Completed();
+            });
+
             return Command.StartExecution(token);
         }
 
         public async Task StopAsync(CancellationToken token)
         {
             log.LogInformation("Request stopping");
-            status.OnNext(false);
+            OnStatus(false);
             if (Command != null)
             {
                 await Command.StopExecution(token);
             }
 
-            status.OnCompleted();
+            Completed();
+        }
+
+        public void Dispose()
+        {
+            if (isDisposed)
+            {
+                return;
+            }
+
+            isDisposed = true;
+            Completed();
+            commandStatus?.Dispose();
             container?.Dispose();
+            status?.Dispose();
+        }
+
+        private void OnStatus(bool value)
+        {
+            if (isCompleted)
+            {
+                return;
+            }
+
+            status.OnNext(value);
+        }
+
+        private void Completed()
+        {
+            if (isCompleted)
+            {
+                return;
+            }
+
+            isCompleted = true;
+            status.OnCompleted();
         }
     }
 }

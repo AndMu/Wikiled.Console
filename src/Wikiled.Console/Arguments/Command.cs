@@ -1,4 +1,5 @@
 using System;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +13,10 @@ namespace Wikiled.Console.Arguments
         private readonly CancellationTokenSource executionToken = new CancellationTokenSource();
 
         private Task executionTask;
+
+        private Subject<bool> status = new Subject<bool>();
+
+        public IObservable<bool> Status => status;
 
         /// <summary>
         /// The name of the command. The base implementation is to strip off the last
@@ -50,11 +55,16 @@ namespace Wikiled.Console.Arguments
                     await executionTask.ConfigureAwait(false);
                 }
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
             }
         }
 
         protected abstract Task Execute(CancellationToken token);
+
+        protected void OnCompleted(bool value)
+        {
+            status.OnNext(value);
+        }
     }
 }
