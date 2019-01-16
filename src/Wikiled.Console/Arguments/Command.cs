@@ -2,6 +2,7 @@ using System;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Wikiled.Console.Arguments
 {
@@ -14,9 +15,16 @@ namespace Wikiled.Console.Arguments
 
         private Task executionTask;
 
-        private Subject<bool> status = new Subject<bool>();
+        private readonly Subject<bool> status = new Subject<bool>();
+
+        protected Command(ILogger logger)
+        {
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
 
         public IObservable<bool> Status => status;
+
+        public ILogger Logger { get; }
 
         /// <summary>
         /// The name of the command. The base implementation is to strip off the last
@@ -41,7 +49,7 @@ namespace Wikiled.Console.Arguments
 
         public virtual Task StartExecution(CancellationToken token)
         {
-            executionTask = Task.Run(() => Execute(executionToken.Token), executionToken.Token);
+            executionTask = Task.Run(() => MainExecution(executionToken.Token), executionToken.Token);
             return Task.CompletedTask;
         }
 
@@ -62,9 +70,18 @@ namespace Wikiled.Console.Arguments
 
         protected abstract Task Execute(CancellationToken token);
 
-        protected void OnCompleted(bool value)
+        private async Task MainExecution(CancellationToken token)
         {
-            status.OnNext(value);
+            try
+            {
+                await Execute(executionToken.Token).ConfigureAwait(false);
+                status.OnNext(true);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Failed");
+                status.OnNext(false);
+            }
         }
     }
 }

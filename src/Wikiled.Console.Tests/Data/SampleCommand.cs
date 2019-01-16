@@ -7,11 +7,9 @@ namespace Wikiled.Console.Tests.Data
 {
     public class SampleCommand : Command
     {
-        private ILogger<SampleCommand> logger;
-
         public SampleCommand(ILogger<SampleCommand> logger, ConfigOne config)
+            : base(logger)
         {
-            this.logger = logger;
             Config = config;
         }
 

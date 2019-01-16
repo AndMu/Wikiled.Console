@@ -8,11 +8,9 @@ namespace Wikiled.Console.Tests.Data
 {
     public class BlockingCommand : Command
     {
-        private ILogger<BlockingCommand> logger;
-
         public BlockingCommand(ILogger<BlockingCommand> logger, ConfigOne config)
+            : base(logger)
         {
-            this.logger = logger;
             Config = config;
         }
 

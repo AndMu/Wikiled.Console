@@ -28,13 +28,13 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public async Task Acceptance()
         {
-            instance.RegisterCommand<SampleCommand, ConfigOne>("One");
+            instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
             instance.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
             var observer = scheduler.CreateObserver<bool>();
             scheduler.AdvanceBy(100);
             instance.Status.Subscribe(observer);
             await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            string resultText = ((SampleCommand)instance.Command).Config.Data;
+            string resultText = ((BlockingCommand)instance.Command).Config.Data;
             Assert.AreEqual("Test", resultText);
             scheduler.AdvanceBy(200);
             await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
@@ -44,7 +44,7 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public async Task AcceptanceCompleted()
         {
-            instance.RegisterCommand<SampleCommandCompleted, ConfigOne>("One");
+            instance.RegisterCommand<SampleCommand, ConfigOne>("One");
             var observer = scheduler.CreateObserver<bool>();
             scheduler.AdvanceBy(100);
             instance.Status.Subscribe(observer);

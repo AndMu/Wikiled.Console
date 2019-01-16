@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
@@ -49,7 +50,7 @@ namespace Wikiled.Console.Arguments
 
         public Command Command { get; private set; }
 
-        public IObservable<bool> Status => status;
+        public IObservable<bool> Status => status.Distinct();
 
         public string Name { get; }
 
