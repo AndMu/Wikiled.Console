@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Wikiled.Console.HelperMethods
 {
@@ -10,5 +11,12 @@ namespace Wikiled.Console.HelperMethods
 
         [DllImport("kernel32.dll")]
         public static extern uint SetThreadExecutionState(uint esFlags);
+
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        public static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 }
