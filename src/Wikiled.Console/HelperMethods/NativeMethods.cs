@@ -18,5 +18,10 @@ namespace Wikiled.Console.HelperMethods
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        public static void BringConsoleToFront()
+        {
+            SetForegroundWindow(NativeMethods.GetConsoleWindow());
+        }
     }
 }

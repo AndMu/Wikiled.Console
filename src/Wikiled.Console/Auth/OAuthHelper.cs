@@ -1,24 +1,24 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Wikiled.Common.Utilities.Helpers;
 using Wikiled.Console.HelperMethods;
 
 namespace Wikiled.Console.Auth
 {
-    public class OAuthHelper
+    public class OAuthHelper : IOAuthHelper
     {
         private readonly ILogger<OAuthHelper> logger;
 
-        public OAuthHelper(ILogger<OAuthHelper> logger)
+        public OAuthHelper(ILogger<OAuthHelper> logger, int? port = null)
         {
             this.logger = logger;
-            RedirectUri = $"http://{IPAddress.Loopback}:{GetRandomUnusedPort()}/";
+            RedirectUri = $"http://{IPAddress.Loopback}:{port ?? GetRandomUnusedPort()}/";
             logger.LogInformation("redirect URI: " + RedirectUri);
         }
 
-        public string RedirectUri { get; }
+        public string RedirectUri { get; set; }
 
         public string Code { get; private set; }
 
@@ -91,11 +91,6 @@ namespace Wikiled.Console.Auth
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
             listener.Stop();
             return port;
-        }
-
-        private void BringConsoleToFront()
-        {
-            NativeMethods.SetForegroundWindow(NativeMethods.GetConsoleWindow());
         }
     }
 }
