@@ -9,9 +9,9 @@ namespace Wikiled.Console.Auth
     {
         private readonly IAuthClient<T> client;
 
-        private readonly OAuthHelper helper;
+        private readonly IOAuthHelper helper;
 
-        public ConsoleOAuthAuthentication(IAuthClient<T> client, OAuthHelper helper)
+        public ConsoleOAuthAuthentication(IAuthClient<T> client, IOAuthHelper helper)
         {
             this.client = client ?? throw new ArgumentNullException(nameof(client));
             this.helper = helper ?? throw new ArgumentNullException(nameof(helper));
@@ -22,7 +22,7 @@ namespace Wikiled.Console.Auth
             var auth = client.BuildAuthorizeUrl(helper.RedirectUri);
             await helper.Start(auth, null).ConfigureAwait(false);
             var code = helper.Code;
-            T token = await client.GetToken(code, helper.RedirectUri);
+            T token = await client.GetToken(code, helper.RedirectUri).ConfigureAwait(false);
             return token;
         }
 

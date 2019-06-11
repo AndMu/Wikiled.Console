@@ -1,7 +1,5 @@
 using System;
 using NUnit.Framework;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Microsoft.Extensions.Logging.Abstractions;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
