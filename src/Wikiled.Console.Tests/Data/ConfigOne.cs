@@ -1,4 +1,4 @@
-﻿using Autofac;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Wikiled.Console.Arguments;
 
 namespace Wikiled.Console.Tests.Data
@@ -7,7 +7,7 @@ namespace Wikiled.Console.Tests.Data
     {
         public string Data { get; set; }
 
-        public void Build(ContainerBuilder builder)
+        public void Build(IServiceCollection services)
         {
         }
     }

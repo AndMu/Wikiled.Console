@@ -1,9 +1,9 @@
-﻿using Autofac;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Wikiled.Console.Arguments
 {
     public interface ICommandConfig
     {
-        void Build(ContainerBuilder builder);
+        void Build(IServiceCollection services);
     }
 }

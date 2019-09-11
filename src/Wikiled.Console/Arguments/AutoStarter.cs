@@ -1,5 +1,4 @@
-﻿using Autofac;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Wikiled.Common.Logging;
 using Wikiled.Common.Utilities.Modules;
 
@@ -17,15 +17,15 @@ namespace Wikiled.Console.Arguments
     {
         private readonly ILogger<AutoStarter> log;
 
-        private readonly ContainerBuilder builder = new ContainerBuilder();
-
         private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
 
         private readonly string[] args;
 
-        private IContainer container;
-
         private readonly Subject<bool> status = new Subject<bool>();
+
+        private readonly ServiceCollection service = new ServiceCollection();
+
+        private ServiceProvider container;
 
         private IDisposable commandStatus;
 
@@ -58,7 +58,7 @@ namespace Wikiled.Console.Arguments
             where T : Command
             where TConfig : ICommandConfig, new()
         {
-            builder.RegisterType<T>().Named<Command>(name.ToLower());
+            service.AddScoped<Command, T>(name.ToLower());
             configs[name] = new TConfig();
             return this;
         }
@@ -92,11 +92,11 @@ namespace Wikiled.Console.Arguments
 
             OnStatus(true);
             config.ParseArguments(args.Skip(1));
-            builder.RegisterModule(new LoggingModule(LoggerFactory));
-            config.Build(builder);
-            builder.RegisterInstance(config).As(config.GetType());
-            container = builder.Build();
-            Command = container.ResolveNamed<Command>(args[0].ToLower());
+            new LoggingModule(LoggerFactory).ConfigureServices(service);
+            config.Build(service);
+            service.AddSingleton(config.GetType(), ctx => config);
+            container = service.BuildServiceProvider();
+            Command = container.GetService<Command>(args[0].ToLower());
             commandStatus = Command.Status.Subscribe(item =>
             {
                 log.LogInformation(
