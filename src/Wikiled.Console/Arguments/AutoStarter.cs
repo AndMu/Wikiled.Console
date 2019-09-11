@@ -92,7 +92,7 @@ namespace Wikiled.Console.Arguments
 
             OnStatus(true);
             config.ParseArguments(args.Skip(1));
-            new LoggingModule(LoggerFactory).ConfigureServices(service);
+            service.RegisterModule(new LoggingModule(LoggerFactory));
             config.Build(service);
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
