@@ -96,7 +96,7 @@ namespace Wikiled.Console.Arguments
             config.Build(service);
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
-            Command = container.CreateScope().ServiceProvider.GetService<Command>(args[0].ToLower());
+            Command = container.GetService<Command>(args[0].ToLower());
             commandStatus = Command.Status.Subscribe(item =>
             {
                 log.LogInformation(
