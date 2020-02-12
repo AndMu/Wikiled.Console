@@ -49,7 +49,7 @@ namespace Wikiled.Console.Arguments
 
         public virtual Task StartExecution(CancellationToken token)
         {
-            executionTask = Task.Run(() => MainExecution(executionToken.Token), executionToken.Token);
+            executionTask = Task.Run(() => MainExecution(), executionToken.Token);
             return Task.CompletedTask;
         }
 
@@ -70,7 +70,7 @@ namespace Wikiled.Console.Arguments
 
         protected abstract Task Execute(CancellationToken token);
 
-        private async Task MainExecution(CancellationToken token)
+        private async Task MainExecution()
         {
             try
             {

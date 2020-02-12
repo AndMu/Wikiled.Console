@@ -46,6 +46,8 @@ namespace Wikiled.Console.Arguments
             log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
         }
 
+        public IServiceCollection Collection => service;
+
         public ILoggerFactory LoggerFactory { get; }
 
         public Command Command { get; private set; }
