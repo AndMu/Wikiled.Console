@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -56,6 +57,8 @@ namespace Wikiled.Console.Arguments
 
         public string Name { get; }
 
+        public Func<IServiceProvider, Task> Init { get; set; }
+
         public IAutoStarter RegisterCommand<T, TConfig>(string name)
             where T : Command
             where TConfig : ICommandConfig, new()
@@ -65,19 +68,19 @@ namespace Wikiled.Console.Arguments
             return this;
         }
 
-        public Task StartAsync(CancellationToken token)
+        public async Task StartAsync(CancellationToken token)
         {
             log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
             {
                 log.LogWarning("Please specify arguments");
-                return Task.CompletedTask;
+                return;
             }
 
             if (args.Length == 0)
             {
                 log.LogError("Please specify command");
-                return Task.CompletedTask;
+                return;
             }
 
             if (!configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
@@ -89,7 +92,7 @@ namespace Wikiled.Console.Arguments
                     log.LogError(commandConfig.Key);
                 }
 
-                return Task.CompletedTask;
+                return;
             }
 
             OnStatus(true);
@@ -99,6 +102,11 @@ namespace Wikiled.Console.Arguments
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
             Command = container.GetService<Command>(args[0].ToLower());
+            if (Init != null)
+            {
+                await Init(container).ConfigureAwait(false);
+            }
+
             commandStatus = Command.Status.Subscribe(item =>
             {
                 log.LogInformation(
@@ -108,7 +116,7 @@ namespace Wikiled.Console.Arguments
                 Completed();
             });
 
-            return Command.StartExecution(token);
+            await Command.StartExecution(token).ConfigureAwait(false);
         }
 
         public async Task StopAsync(CancellationToken token)
