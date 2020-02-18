@@ -47,7 +47,7 @@ namespace Wikiled.Console.Arguments
             log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
         }
 
-        public IServiceCollection Collection => service;
+        public Action<ILoggingBuilder> LogBuilder { get; set; }
 
         public ILoggerFactory LoggerFactory { get; }
 
@@ -97,7 +97,7 @@ namespace Wikiled.Console.Arguments
 
             OnStatus(true);
             config.ParseArguments(args.Skip(1));
-            service.RegisterModule(new LoggingModule(LoggerFactory));
+            service.RegisterModule(new LoggingModule(LoggerFactory, LogBuilder));
             config.Build(service);
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
