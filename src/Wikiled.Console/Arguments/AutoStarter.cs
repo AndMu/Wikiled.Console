@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -46,8 +45,6 @@ namespace Wikiled.Console.Arguments
             LoggerFactory = factory ?? throw new ArgumentNullException(nameof(factory));
             log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
         }
-
-        public Action<ILoggingBuilder> LogBuilder { get; set; }
 
         public ILoggerFactory LoggerFactory { get; }
 
@@ -97,7 +94,7 @@ namespace Wikiled.Console.Arguments
 
             OnStatus(true);
             config.ParseArguments(args.Skip(1));
-            service.RegisterModule(new LoggingModule(LoggerFactory, LogBuilder));
+            service.RegisterModule(new LoggingModule(LoggerFactory));
             config.Build(service);
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
