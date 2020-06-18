@@ -100,13 +100,13 @@ namespace Wikiled.Console.Arguments
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
             log.LogDebug("Resolving service");
-            Command = container.GetService<Command>(args[0].ToLower());
             if (Init != null)
             {
                 log.LogDebug("Initialisation routine");
                 await Init(container).ConfigureAwait(false);
             }
 
+            Command = container.GetService<Command>(args[0].ToLower());
             commandStatus = Command.Status.Subscribe(item =>
             {
                 log.LogInformation(
