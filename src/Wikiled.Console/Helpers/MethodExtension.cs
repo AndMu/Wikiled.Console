@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Wikiled.Console.HelperMethods
+namespace Wikiled.Console.Helpers
 {
     public static class MethodExtension
     {

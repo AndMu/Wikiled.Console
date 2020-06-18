@@ -49,12 +49,14 @@ namespace Wikiled.Console.Arguments
 
         public virtual Task StartExecution(CancellationToken token)
         {
-            executionTask = Task.Run(() => MainExecution(), executionToken.Token);
+            Logger.LogDebug("StartExecution");
+            executionTask = Task.Run(MainExecution, executionToken.Token);
             return Task.CompletedTask;
         }
 
         public virtual async Task StopExecution(CancellationToken token)
         {
+            Logger.LogDebug("StopExecution");
             executionToken.Cancel();
             try
             {
@@ -74,6 +76,7 @@ namespace Wikiled.Console.Arguments
         {
             try
             {
+                Logger.LogDebug("MainExecution");
                 await Execute(executionToken.Token).ConfigureAwait(false);
                 status.OnNext(true);
             }

@@ -99,9 +99,11 @@ namespace Wikiled.Console.Arguments
             config.Build(service);
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
+            log.LogDebug("Resolving service");
             Command = container.GetService<Command>(args[0].ToLower());
             if (Init != null)
             {
+                log.LogDebug("Initialisation routine");
                 await Init(container).ConfigureAwait(false);
             }
 
@@ -114,6 +116,7 @@ namespace Wikiled.Console.Arguments
                 Completed();
             });
 
+            log.LogDebug("Starting execution");
             await Command.StartExecution(token).ConfigureAwait(false);
         }
 
