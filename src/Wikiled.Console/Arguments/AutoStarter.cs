@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Wikiled.Common.Logging;
 using Wikiled.Common.Utilities.Modules;
 
 namespace Wikiled.Console.Arguments
@@ -17,13 +16,13 @@ namespace Wikiled.Console.Arguments
     {
         private readonly ILogger<AutoStarter> log;
 
-        private readonly Dictionary<string, ICommandConfig> configs = new Dictionary<string, ICommandConfig>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ICommandConfig> configs = new(StringComparer.OrdinalIgnoreCase);
 
         private readonly string[] args;
 
-        private readonly Subject<bool> status = new Subject<bool>();
+        private readonly Subject<bool> status = new();
 
-        private readonly ServiceCollection service = new ServiceCollection();
+        private readonly ServiceCollection service = new();
 
         private ServiceProvider container;
 
@@ -43,7 +42,7 @@ namespace Wikiled.Console.Arguments
             Name = name;
             this.args = args ?? throw new ArgumentNullException(nameof(args));
             LoggerFactory = factory ?? throw new ArgumentNullException(nameof(factory));
-            log = ApplicationLogging.LoggerFactory.CreateLogger<AutoStarter>();
+            log = LoggerFactory.CreateLogger<AutoStarter>();
         }
 
         public ILoggerFactory LoggerFactory { get; }
@@ -100,13 +99,14 @@ namespace Wikiled.Console.Arguments
             service.AddSingleton(config.GetType(), ctx => config);
             container = service.BuildServiceProvider();
             log.LogDebug("Resolving service");
+            using var scope = container.CreateScope();
             if (Init != null)
             {
                 log.LogDebug("Initialisation routine");
-                await Init(container).ConfigureAwait(false);
+                await Init(scope.ServiceProvider).ConfigureAwait(false);
             }
 
-            Command = container.GetService<Command>(args[0].ToLower());
+            Command = scope.ServiceProvider.GetService<Command>(args[0].ToLower());
             commandStatus = Command.Status.Subscribe(item =>
             {
                 log.LogInformation(
