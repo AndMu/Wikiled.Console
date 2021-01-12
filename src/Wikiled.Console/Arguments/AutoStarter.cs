@@ -121,8 +121,9 @@ namespace Wikiled.Console.Arguments
                 log.LogDebug("Starting execution");
                 await Command.StartExecution(token).ConfigureAwait(false);
             }
-            catch
+            catch(Exception ex)
             {
+                log.LogError(ex, "Failed");
                 OnStatus(false);
                 Completed();
                 throw;
