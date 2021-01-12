@@ -11,11 +11,11 @@ namespace Wikiled.Console.Arguments
     /// </summary>
     public abstract class Command
     {
-        private readonly CancellationTokenSource executionToken = new CancellationTokenSource();
+        private readonly CancellationTokenSource executionToken = new();
 
         private Task executionTask;
 
-        private readonly Subject<bool> status = new Subject<bool>();
+        private readonly Subject<bool> status = new();
 
         protected Command(ILogger logger)
         {
