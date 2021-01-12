@@ -1,11 +1,9 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Reactive.Testing;
-using Wikiled.Common.Logging;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
@@ -74,6 +72,18 @@ namespace Wikiled.Console.Tests.Arguments
             Assert.Throws<ArgumentException>(() => new AutoStarter(new NullLoggerFactory(), null, new []{"Test"}));
             Assert.Throws<ArgumentNullException>(() => new AutoStarter(null, "Test", new[] { "Test" }));
             Assert.Throws<ArgumentNullException>(() => new AutoStarter(new NullLoggerFactory(), "Test", null));
+        }
+
+        [Test]
+        public void BadArguments()
+        {
+            instance = new AutoStarter(new NullLoggerFactory(), "Test", new[] { "Test", "-Data=", "Test" });
+            instance.RegisterCommand<SampleCommand, ConfigOne>("Test");
+            var observer = scheduler.CreateObserver<bool>();
+            scheduler.AdvanceBy(100);
+            instance.Status.Subscribe(observer);
+            Assert.ThrowsAsync<ArgumentException>(async () => await instance.StartAsync(CancellationToken.None).ConfigureAwait(false));
+            observer.Messages.AssertEqual(OnNext(100, true), OnNext(100, false), OnCompleted<bool>(100));
         }
 
         private AutoStarter CreateInstance()

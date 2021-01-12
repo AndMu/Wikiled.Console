@@ -79,7 +79,7 @@ namespace Wikiled.Console.Arguments
                 return;
             }
 
-            if (!configs.TryGetValue(args[0].ToLower(), out ICommandConfig config))
+            if (!configs.TryGetValue(args[0], out ICommandConfig config))
             {
                 log.LogError("Unknown command: {0}", args[0]);
                 log.LogError("Supported:");
@@ -91,33 +91,42 @@ namespace Wikiled.Console.Arguments
                 return;
             }
 
-            OnStatus(true);
-            config.ParseArguments(args.Skip(1));
-            service.RegisterModule(new LoggingModule(LoggerFactory));            
-
-            config.Build(service);
-            service.AddSingleton(config.GetType(), ctx => config);
-            container = service.BuildServiceProvider();
-            log.LogDebug("Resolving service");
-            using var scope = container.CreateScope();
-            if (Init != null)
+            try
             {
-                log.LogDebug("Initialisation routine");
-                await Init(scope.ServiceProvider).ConfigureAwait(false);
+                OnStatus(true);
+                config.ParseArguments(args.Skip(1));
+                service.RegisterModule(new LoggingModule(LoggerFactory));
+
+                config.Build(service);
+                service.AddSingleton(config.GetType(), ctx => config);
+                container = service.BuildServiceProvider();
+                log.LogDebug("Resolving service");
+                using var scope = container.CreateScope();
+                if (Init != null)
+                {
+                    log.LogDebug("Initialisation routine");
+                    await Init(scope.ServiceProvider).ConfigureAwait(false);
+                }
+
+                Command = scope.ServiceProvider.GetService<Command>(args[0].ToLower());
+                commandStatus = Command.Status.Subscribe(item =>
+                {
+                    log.LogInformation(
+                        "Command completed: {0}",
+                        item ? "Successfully" : "Failed");
+                    OnStatus(false);
+                    Completed();
+                });
+
+                log.LogDebug("Starting execution");
+                await Command.StartExecution(token).ConfigureAwait(false);
             }
-
-            Command = scope.ServiceProvider.GetService<Command>(args[0].ToLower());
-            commandStatus = Command.Status.Subscribe(item =>
+            catch
             {
-                log.LogInformation(
-                    "Command completed: {0}",
-                    item ? "Successfully" : "Failed");
                 OnStatus(false);
                 Completed();
-            });
-
-            log.LogDebug("Starting execution");
-            await Command.StartExecution(token).ConfigureAwait(false);
+                throw;
+            }
         }
 
         public async Task StopAsync(CancellationToken token)
