@@ -16,7 +16,7 @@ namespace Wikiled.Console.Tests.Arguments
         [SetUp]
         public void SetUp()
         {
-            autoStarter = new AutoStarter(new NullLoggerFactory(), "Test", new[] { "One", "-Data=Test" });
+            autoStarter = new AutoStarter("Test", new[] { "One", "-Data=Test" }, builder => { });
             autoStarter.RegisterCommand<SampleCommand, ConfigOne>("One");
             autoStarter.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
             instance = CreateSyncExecutor();

@@ -14,15 +14,13 @@ namespace Wikiled.Console.Arguments
 {
     public class AutoStarter : IAutoStarter
     {
-        private readonly ILogger<AutoStarter> log;
-
         private readonly Dictionary<string, ICommandConfig> configs = new(StringComparer.OrdinalIgnoreCase);
+
+        private readonly ILogger<AutoStarter> log;
 
         private readonly string[] args;
 
         private readonly Subject<bool> status = new();
-
-        private readonly ServiceCollection service = new();
 
         private ServiceProvider container;
 
@@ -32,7 +30,7 @@ namespace Wikiled.Console.Arguments
 
         private bool isCompleted;
 
-        public AutoStarter(ILoggerFactory factory, string name, string[] args)
+        public AutoStarter(string name, string[] args, Action<ILoggingBuilder> logging)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -41,11 +39,11 @@ namespace Wikiled.Console.Arguments
 
             Name = name;
             this.args = args ?? throw new ArgumentNullException(nameof(args));
-            LoggerFactory = factory ?? throw new ArgumentNullException(nameof(factory));
-            log = LoggerFactory.CreateLogger<AutoStarter>();
+            Service.AddLogging(logging);
+            log = Service.BuildServiceProvider().GetRequiredService<ILogger<AutoStarter>>();
         }
 
-        public ILoggerFactory LoggerFactory { get; }
+        public ServiceCollection Service { get; } = new();
 
         public Command Command { get; private set; }
 
@@ -59,7 +57,7 @@ namespace Wikiled.Console.Arguments
             where T : Command
             where TConfig : ICommandConfig, new()
         {
-            service.AddScoped<Command, T>(name.ToLower());
+            Service.AddScoped<Command, T>(name.ToLower());
             configs[name] = new TConfig();
             return this;
         }
@@ -95,11 +93,10 @@ namespace Wikiled.Console.Arguments
             {
                 OnStatus(true);
                 config.ParseArguments(args.Skip(1));
-                service.RegisterModule(new LoggingModule(LoggerFactory));
 
-                config.Build(service);
-                service.AddSingleton(config.GetType(), ctx => config);
-                container = service.BuildServiceProvider();
+                config.Build(Service);
+                Service.AddSingleton(config.GetType(), ctx => config);
+                container = Service.BuildServiceProvider();
                 log.LogDebug("Resolving service");
                 using var scope = container.CreateScope();
                 if (Init != null)
@@ -132,7 +129,7 @@ namespace Wikiled.Console.Arguments
 
         public async Task StopAsync(CancellationToken token)
         {
-            log.LogInformation("Request stopping");
+            log?.LogInformation("Request stopping");
             OnStatus(false);
             if (Command != null)
             {

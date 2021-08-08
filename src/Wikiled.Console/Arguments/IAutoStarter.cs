@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using System;
 
 namespace Wikiled.Console.Arguments
 {
@@ -10,9 +10,9 @@ namespace Wikiled.Console.Arguments
 
         Command Command { get; }
 
-        ILoggerFactory LoggerFactory { get; }
-
         IObservable<bool> Status { get; }
+
+        ServiceCollection Service { get; }
 
         IAutoStarter RegisterCommand<T, TConfig>(string name)
             where T : Command

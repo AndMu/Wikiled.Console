@@ -69,15 +69,14 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(new NullLoggerFactory(), null, new []{"Test"}));
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter(null, "Test", new[] { "Test" }));
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter(new NullLoggerFactory(), "Test", null));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null, new[] { "Test" }, builder => { }));
+            Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null, builder => { }));
         }
 
         [Test]
         public void BadArguments()
         {
-            instance = new AutoStarter(new NullLoggerFactory(), "Test", new[] { "Test", "-Data=", "Test" });
+            instance = new AutoStarter( "Test", new[] { "Test", "-Data=", "Test" }, builder => { });
             instance.RegisterCommand<SampleCommand, ConfigOne>("Test");
             var observer = scheduler.CreateObserver<bool>();
             scheduler.AdvanceBy(100);
@@ -88,7 +87,7 @@ namespace Wikiled.Console.Tests.Arguments
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter(new NullLoggerFactory(), "Test", new[] { "One", "-Data=Test" });
+            return new AutoStarter( "Test", new[] { "One", "-Data=Test" }, builder => { });
         }
     }
 }

@@ -11,9 +11,9 @@ namespace Wikiled.Console.Arguments
 
         private CancellationTokenSource source;
 
-        private readonly AutoStarter starter;
+        private readonly IAutoStarter starter;
 
-        public SyncExecutor(AutoStarter starter)
+        public SyncExecutor(IAutoStarter starter)
         {
             this.starter = starter ?? throw new ArgumentNullException(nameof(starter));
         }
