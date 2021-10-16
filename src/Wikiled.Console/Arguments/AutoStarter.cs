@@ -7,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wikiled.Common.Utilities.Modules;
 
@@ -30,6 +31,8 @@ namespace Wikiled.Console.Arguments
 
         private bool isCompleted;
 
+        private IConfiguration configuration;
+
         public AutoStarter(string name, string[] args, Action<ILoggingBuilder> logging)
         {
             if (string.IsNullOrEmpty(name))
@@ -52,6 +55,14 @@ namespace Wikiled.Console.Arguments
         public string Name { get; }
 
         public Func<IServiceProvider, Task> Init { get; set; }
+
+        public void SetupConfiguration(Action<IConfigurationBuilder> config)
+        {
+            ConfigurationBuilder builder = new ConfigurationBuilder();
+            config?.Invoke(builder);
+            configuration = builder.Build();
+            Service.AddSingleton(configuration);
+        }
 
         public IAutoStarter RegisterCommand<T, TConfig>(string name)
             where T : Command
@@ -94,7 +105,12 @@ namespace Wikiled.Console.Arguments
                 OnStatus(true);
                 config.ParseArguments(args.Skip(1));
 
-                config.Build(Service);
+                if (configuration == null)
+                {
+                    SetupConfiguration(null);
+                }
+
+                config.Build(Service, configuration);
                 Service.AddSingleton(config.GetType(), ctx => config);
                 container = Service.BuildServiceProvider();
                 log.LogDebug("Resolving service");
