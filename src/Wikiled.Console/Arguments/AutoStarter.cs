@@ -74,10 +74,11 @@ namespace Wikiled.Console.Arguments
             }
 
             return builder
-                .ConfigureServices(collection =>
+                .ConfigureServices((context, collection) =>
                 {
                     collection.Add(new ServiceDescriptor(runDefinition.Config.GetType(), ctx => runDefinition.Config, ServiceLifetime.Singleton));
                     collection.Add(runDefinition.Service);
+                    runDefinition.Config.Build(collection, context.Configuration);
                 }).ConfigureLogging(loggingBuilder);
         }
     }
