@@ -1,10 +1,10 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
@@ -54,7 +54,7 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(null, new NullLogger<AutoStarter>()));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null, builder => builder.AddDebug()));
             Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null));
         }
 
@@ -66,7 +66,7 @@ namespace Wikiled.Console.Tests.Arguments
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter("Test", new NullLogger<AutoStarter>());
+            return new AutoStarter("Test", builder => builder.AddDebug());
         }
     }
 }

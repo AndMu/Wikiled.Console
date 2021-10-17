@@ -14,7 +14,9 @@ namespace Wikiled.Console.Arguments
 
         private readonly ILogger<AutoStarter> log;
 
-        public AutoStarter(string name, ILogger<AutoStarter> log)
+        private readonly Action<ILoggingBuilder> loggingBuilder;
+
+        public AutoStarter(string name, Action<ILoggingBuilder> loggingBuilder)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -22,7 +24,8 @@ namespace Wikiled.Console.Arguments
             }
 
             Name = name;
-            this.log = log ?? throw new ArgumentNullException(nameof(log));
+            this.loggingBuilder = loggingBuilder ?? throw new ArgumentNullException(nameof(loggingBuilder));
+            log  = LoggerFactory.Create(loggingBuilder).CreateLogger<AutoStarter>();
         }
 
         public string Name { get; }
@@ -41,11 +44,13 @@ namespace Wikiled.Console.Arguments
             log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
             {
+                log.LogError("Please specify arguments");
                 throw new Exception("Please specify arguments");
             }
 
             if (args.Length == 0)
             {
+                log.LogError("Please specify command");
                 throw new Exception("Please specify command");
             }
 
@@ -73,7 +78,7 @@ namespace Wikiled.Console.Arguments
                 {
                     collection.Add(new ServiceDescriptor(runDefinition.Config.GetType(), ctx => runDefinition.Config, ServiceLifetime.Singleton));
                     collection.Add(runDefinition.Service);
-                });
+                }).ConfigureLogging(loggingBuilder);
         }
     }
 }
