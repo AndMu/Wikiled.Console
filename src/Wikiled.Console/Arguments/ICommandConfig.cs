@@ -5,6 +5,8 @@ namespace Wikiled.Console.Arguments
 {
     public interface ICommandConfig
     {
+        string Environment { get; set; }
+
         void Build(IServiceCollection services, IConfiguration config);
     }
 }

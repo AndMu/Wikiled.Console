@@ -1,28 +1,24 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Wikiled.Console.Arguments
 {
     /// <summary>
     /// Provides a base class for the functionality that all commands must implement.
     /// </summary>
-    public abstract class Command
+    public abstract class Command : IHostedService
     {
         private readonly CancellationTokenSource executionToken = new();
 
         private Task executionTask;
 
-        private readonly Subject<bool> status = new();
-
         protected Command(ILogger logger)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        public IObservable<bool> Status => status;
 
         public ILogger Logger { get; }
 
@@ -47,14 +43,14 @@ namespace Wikiled.Console.Arguments
             }
         }
 
-        public virtual Task StartExecution(CancellationToken token)
+        public virtual Task StartAsync(CancellationToken token)
         {
             Logger.LogDebug("StartExecution");
             executionTask = Task.Run(MainExecution, executionToken.Token);
             return Task.CompletedTask;
         }
 
-        public virtual async Task StopExecution(CancellationToken token)
+        public virtual async Task StopAsync(CancellationToken token)
         {
             Logger.LogDebug("StopExecution");
             executionToken.Cancel();
@@ -78,12 +74,10 @@ namespace Wikiled.Console.Arguments
             {
                 Logger.LogDebug("MainExecution");
                 await Execute(executionToken.Token).ConfigureAwait(false);
-                status.OnNext(true);
             }
             catch (Exception e)
             {
                 Logger.LogError(e, "Failed");
-                status.OnNext(false);
             }
         }
     }

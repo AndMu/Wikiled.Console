@@ -8,6 +8,8 @@ namespace Wikiled.Console.Tests.Data
     {
         public string Data { get; set; }
 
+        public string Environment { get; set; }
+
         public void Build(IServiceCollection services, IConfiguration configuration)
         {
         }
