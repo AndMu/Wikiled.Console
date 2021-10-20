@@ -1,93 +1,72 @@
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
 namespace Wikiled.Console.Tests.Arguments
 {
     [TestFixture]
-    public class AutoStarterTests : ReactiveTest
+    public class AutoStarterTests
     {
         private AutoStarter instance;
 
-        private TestScheduler scheduler;
+        private CancellationTokenSource token;
+
+        private IHost host;
 
         [SetUp]
         public void SetUp()
         {
+            token = new CancellationTokenSource();
             instance = CreateInstance();
-            scheduler = new TestScheduler();
+            instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
+            instance.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            token.Cancel();
+            host?.Dispose();
         }
 
         [Test]
         public async Task Acceptance()
         {
-            instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
-            instance.RegisterCommand<SampleCommandTwo, ConfigTwo>("Two");
-            var observer = scheduler.CreateObserver<bool>();
-            scheduler.AdvanceBy(100);
-            instance.Status.Subscribe(observer);
-            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            string resultText = ((BlockingCommand)instance.Command).Config.Data;
+            host = instance.Build(new[] { "One", "-Data=Test" }).Build();
+            await host.StartAsync(token.Token);
+            await Task.Delay(100);
+            
+            var command = (BlockingCommand)host.Services.GetRequiredService<IHostedService>();
+            var config = host.Services.GetRequiredService<ConfigOne>();
+            string resultText = config.Data;
             Assert.AreEqual("Test", resultText);
-            scheduler.AdvanceBy(200);
-            await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
-            observer.Messages.AssertEqual(OnNext(100, true), OnNext(300, false), OnCompleted<bool>(300));
-        }
-
-        [Test]
-        public async Task AcceptanceCompleted()
-        {
-            instance.RegisterCommand<SampleCommand, ConfigOne>("One");
-            var observer = scheduler.CreateObserver<bool>();
-            scheduler.AdvanceBy(100);
-            instance.Status.Subscribe(observer);
-            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            await Task.Delay(500).ConfigureAwait(false);
-            scheduler.AdvanceBy(200);
-            await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
-            observer.Messages.AssertEqual(OnNext(100, true), OnNext(100, false), OnCompleted<bool>(100));
-        }
-
-        [Test]
-        public async Task Blocking()
-        {
-            instance.RegisterCommand<BlockingCommand, ConfigOne>("One");
-            await instance.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            await Task.Delay(500).ConfigureAwait(false);
-            var command = ((BlockingCommand)instance.Command);
-            string resultText = command.Config.Data;
-            Assert.AreEqual("Test", resultText);
-            await instance.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.AreEqual(1, command.Stage);
+            await host.StopAsync(token.Token).ConfigureAwait(false);
             Assert.AreEqual(2, command.Stage);
         }
 
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(null, new[] { "Test" }, builder => { }));
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null, builder => { }));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null, builder => builder.AddDebug()));
+            Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null));
         }
 
         [Test]
         public void BadArguments()
         {
-            instance = new AutoStarter( "Test", new[] { "Test", "-Data=", "Test" }, builder => { });
-            instance.RegisterCommand<SampleCommand, ConfigOne>("Test");
-            var observer = scheduler.CreateObserver<bool>();
-            scheduler.AdvanceBy(100);
-            instance.Status.Subscribe(observer);
-            Assert.ThrowsAsync<ArgumentException>(async () => await instance.StartAsync(CancellationToken.None).ConfigureAwait(false));
-            observer.Messages.AssertEqual(OnNext(100, true), OnNext(100, false), OnCompleted<bool>(100));
+            Assert.Throws<Exception>(() => instance.Build(new[] { "Test", "-Data=Test" }));
         }
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter( "Test", new[] { "One", "-Data=Test" }, builder => { });
+            return new AutoStarter("Test", builder => builder.AddDebug());
         }
     }
 }

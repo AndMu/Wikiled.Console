@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Wikiled.Console.Arguments;
 
 namespace Wikiled.Console.Tests.Data
@@ -7,7 +8,9 @@ namespace Wikiled.Console.Tests.Data
     {
         public string Data { get; set; }
 
-        public void Build(IServiceCollection services)
+        public string Environment { get; set; }
+
+        public void Build(IServiceCollection services, IConfiguration configuration)
         {
         }
     }
