@@ -31,10 +31,10 @@ namespace Wikiled.Console.Arguments
         public string Name { get; }
 
         public IAutoStarter RegisterCommand<T, TConfig>(string name)
-            where T : Command
+            where T : ICommand
             where TConfig : ICommandConfig, new()
         {
-            var descriptor = new ServiceDescriptor(typeof(IHostedService), typeof(T), ServiceLifetime.Singleton);
+            var descriptor = new ServiceDescriptor(typeof(ICommand), typeof(T), ServiceLifetime.Singleton);
             configs[name] = (new TConfig(), descriptor);
             return this;
         }
@@ -79,6 +79,7 @@ namespace Wikiled.Console.Arguments
                     collection.Add(new ServiceDescriptor(runDefinition.Config.GetType(), ctx => runDefinition.Config, ServiceLifetime.Singleton));
                     collection.Add(runDefinition.Service);
                     runDefinition.Config.Build(collection, context.Configuration);
+                    collection.AddHostedService<ExecutionHost>();
                 }).ConfigureLogging(loggingBuilder);
         }
     }

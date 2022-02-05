@@ -168,10 +168,10 @@ namespace Wikiled.Console.Arguments
         ///     Prints a general summary of each command.
         /// </summary>
         /// <param name="commands">A collection of possible commands.</param>
-        public static void PrintCommands(IEnumerable<Command> commands)
+        public static void PrintCommands(IEnumerable<ICommand> commands)
         {
             // Print out general descriptions for every command.
-            IEnumerable<string> commandNames = commands.Select(command => command.Name);
+            IEnumerable<string> commandNames = commands.Select(command => command.GetName());
             IEnumerable<string> commandDescriptions = commands.Select(command => command.GetAttribute<DescriptionAttribute>().Description);
             IEnumerable<string> lines = FormatNamesAndDescriptions(commandNames, commandDescriptions, System.Console.WindowWidth);
 

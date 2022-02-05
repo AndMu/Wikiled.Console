@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Wikiled.Console.Arguments;
 
 namespace Wikiled.Console.Tests.Data
 {
-    public class BlockingCommand : Command
+    public class BlockingCommand : ICommand
     {
-        public BlockingCommand(ILogger<BlockingCommand> logger, ConfigOne config)
-            : base(logger)
+        public BlockingCommand(ConfigOne config)
         {
             Config = config;
         }
@@ -18,7 +16,7 @@ namespace Wikiled.Console.Tests.Data
 
         public int Stage { get; set; }
 
-        protected override async Task Execute(CancellationToken token)
+        public async Task Execute(CancellationToken token)
         {
             Stage = 1;
             try
