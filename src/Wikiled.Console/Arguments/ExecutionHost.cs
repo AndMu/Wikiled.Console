@@ -71,14 +71,14 @@ namespace Wikiled.Console.Arguments
         {
             try
             {
-                logger.LogDebug("MainExecution");
                 await command.Execute(executionToken.Token);
-                appLifetime.StopApplication();
             }
             catch (Exception e)
             {
                 logger.LogError(e, "Failed");
             }
+
+            appLifetime.StopApplication();
         }
     }
 }
