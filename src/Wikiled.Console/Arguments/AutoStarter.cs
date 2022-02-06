@@ -30,11 +30,13 @@ namespace Wikiled.Console.Arguments
 
         public string Name { get; }
 
+        public AppConfig Config { get; } = new ();
+
         public IAutoStarter RegisterCommand<T, TConfig>(string name)
-            where T : Command
+            where T : ICommand
             where TConfig : ICommandConfig, new()
         {
-            var descriptor = new ServiceDescriptor(typeof(IHostedService), typeof(T), ServiceLifetime.Singleton);
+            var descriptor = new ServiceDescriptor(typeof(ICommand), typeof(T), ServiceLifetime.Singleton);
             configs[name] = (new TConfig(), descriptor);
             return this;
         }
@@ -54,31 +56,38 @@ namespace Wikiled.Console.Arguments
                 throw new Exception("Please specify command");
             }
 
-            if (!configs.TryGetValue(args[0], out var runDefinition))
+            var name = args[0];
+            if (!configs.TryGetValue(name, out var runDefinition))
             {
-                log.LogError("Unknown command: {0}", args[0]);
-                log.LogError("Supported:");
+                log.LogError("Unknown command: {0}", name);
+                log.LogError("Supported commands:");
                 foreach (var commandConfig in configs)
                 {
                     log.LogError(commandConfig.Key);
                 }
 
-                throw new Exception($"Unknown command: {args[0]}");
+                throw new Exception($"Unknown command: {name}");
             }
 
             runDefinition.Config.ParseArguments(args.Skip(1));
             var builder = Host.CreateDefaultBuilder();
-            if (!string.IsNullOrEmpty(runDefinition.Config.Environment))
-            {
-                builder.UseEnvironment(runDefinition.Config.Environment);
-            }
 
             return builder
+               .ConfigureAppConfiguration(
+                    bdx =>
+                    {
+                        if (runDefinition.Config is ICommandConfixExtented extended)
+                        {
+                            extended.Configure(bdx);
+                        }
+                    })
                 .ConfigureServices((context, collection) =>
                 {
+                    collection.AddSingleton(new ExecutionContext(name, Config));
                     collection.Add(new ServiceDescriptor(runDefinition.Config.GetType(), ctx => runDefinition.Config, ServiceLifetime.Singleton));
                     collection.Add(runDefinition.Service);
                     runDefinition.Config.Build(collection, context.Configuration);
+                    collection.AddHostedService<ExecutionHost>();
                 }).ConfigureLogging(loggingBuilder);
         }
     }

@@ -42,7 +42,7 @@ namespace Wikiled.Console.Tests.Arguments
             await host.StartAsync(token.Token);
             await Task.Delay(100);
             
-            var command = (BlockingCommand)host.Services.GetRequiredService<IHostedService>();
+            var command = (BlockingCommand)host.Services.GetRequiredService<ICommand>();
             var config = host.Services.GetRequiredService<ConfigOne>();
             string resultText = config.Data;
             Assert.AreEqual("Test", resultText);

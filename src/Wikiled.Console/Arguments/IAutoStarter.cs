@@ -5,7 +5,7 @@
         string Name { get; }
 
         IAutoStarter RegisterCommand<T, TConfig>(string name)
-            where T : Command
+            where T : ICommand
             where TConfig : ICommandConfig, new();
     }
 }

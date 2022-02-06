@@ -1,21 +1,19 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Wikiled.Console.Arguments;
 
 namespace Wikiled.Console.Tests.Data
 {
-    public class SampleCommand : Command
+    public class SampleCommand : ICommand
     {
-        public SampleCommand(ILogger<SampleCommand> logger, ConfigOne config)
-            : base(logger)
+        public SampleCommand(ConfigOne config)
         {
             Config = config;
         }
 
         public ConfigOne Config { get; }
 
-        protected override Task Execute(CancellationToken token)
+        public Task Execute(CancellationToken token)
         {
             return Task.CompletedTask;
         }
