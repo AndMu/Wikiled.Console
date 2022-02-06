@@ -30,9 +30,10 @@ namespace Wikiled.Console.Arguments
 
         public Task StartAsync(CancellationToken token)
         {
+            logger.LogInformation("{0} Starting...", executionContext.CommandName);
             if (executionContext.Config.ValidateBeforeExecution)
             {
-                logger.LogInformation("{0}: Do you want to continue? (y/n)", executionContext.CommandName);
+                logger.LogInformation("Do you want to continue? (y/n)", executionContext.CommandName);
                 var response = System.Console.ReadLine();
                 if (!string.Equals(response, "y", StringComparison.OrdinalIgnoreCase))
                 {
@@ -72,6 +73,7 @@ namespace Wikiled.Console.Arguments
             try
             {
                 await command.Execute(executionToken.Token);
+                logger.LogInformation("{0} Completed.", executionContext.CommandName);
             }
             catch (Exception e)
             {
