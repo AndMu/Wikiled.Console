@@ -18,17 +18,30 @@ namespace Wikiled.Console.Arguments
 
         private readonly ICommand command;
 
-        public ExecutionHost(ILogger<ExecutionHost> logger, IHostApplicationLifetime appLifetime, ICommand command)
+        private readonly ExecutionContext executionContext;
+
+        public ExecutionHost(ILogger<ExecutionHost> logger, IHostApplicationLifetime appLifetime, ICommand command, ExecutionContext executionContext)
         {
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.appLifetime = appLifetime ?? throw new ArgumentNullException(nameof(appLifetime));
             this.command = command ?? throw new ArgumentNullException(nameof(command));
+            this.executionContext = executionContext ?? throw new ArgumentNullException(nameof(executionContext));
         }
-        
 
         public Task StartAsync(CancellationToken token)
         {
-            logger.LogDebug("StartExecution");
+            if (executionContext.Config.ValidateBeforeExecution)
+            {
+                logger.LogInformation("{0}: Do you want to continue? (y/n)", executionContext.CommandName);
+                var response = System.Console.ReadLine();
+                if (!string.Equals(response, "y", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogInformation("Aborting...");
+                    appLifetime.StopApplication();
+                    return Task.CompletedTask;
+                }
+            }
+
             executionTask = Task.Run(MainExecution, executionToken.Token);
             return Task.CompletedTask;
         }
