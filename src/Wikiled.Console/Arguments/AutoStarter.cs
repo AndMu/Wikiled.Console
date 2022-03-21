@@ -12,8 +12,6 @@ namespace Wikiled.Console.Arguments
     {
         private readonly Dictionary<string, (ICommandConfig Config, ServiceDescriptor Service)> configs = new(StringComparer.OrdinalIgnoreCase);
 
-        private readonly ILogger<AutoStarter> log;
-
         private readonly Action<ILoggingBuilder> loggingBuilder;
 
         public AutoStarter(string name, Action<ILoggingBuilder> loggingBuilder)
@@ -25,10 +23,12 @@ namespace Wikiled.Console.Arguments
 
             Name = name;
             this.loggingBuilder = loggingBuilder ?? throw new ArgumentNullException(nameof(loggingBuilder));
-            log  = LoggerFactory.Create(loggingBuilder).CreateLogger<AutoStarter>();
+            Logger  = LoggerFactory.Create(loggingBuilder).CreateLogger<AutoStarter>();
         }
 
         public string Name { get; }
+
+        public ILogger<AutoStarter> Logger { get; }
 
         public AppConfig Config { get; } = new ();
 
@@ -43,27 +43,27 @@ namespace Wikiled.Console.Arguments
 
         public IHostBuilder Build(string[] args)
         {
-            log.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
+            Logger.LogInformation("Starting {0} version {1}...", Assembly.GetEntryAssembly()?.GetName().Version, Name);
             if (args.Length == 0)
             {
-                log.LogError("Please specify arguments");
+                Logger.LogError("Please specify arguments");
                 throw new Exception("Please specify arguments");
             }
 
             if (args.Length == 0)
             {
-                log.LogError("Please specify command");
+                Logger.LogError("Please specify command");
                 throw new Exception("Please specify command");
             }
 
             var name = args[0];
             if (!configs.TryGetValue(name, out var runDefinition))
             {
-                log.LogError("Unknown command: {0}", name);
-                log.LogError("Supported commands:");
+                Logger.LogError("Unknown command: {0}", name);
+                Logger.LogError("Supported commands:");
                 foreach (var commandConfig in configs)
                 {
-                    log.LogError(commandConfig.Key);
+                    Logger.LogError(commandConfig.Key);
                 }
 
                 throw new Exception($"Unknown command: {name}");
