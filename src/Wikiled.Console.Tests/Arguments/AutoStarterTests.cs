@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Wikiled.Console.Arguments;
 using Wikiled.Console.Tests.Data;
 
@@ -54,8 +53,7 @@ namespace Wikiled.Console.Tests.Arguments
         [Test]
         public void Construct()
         {
-            Assert.Throws<ArgumentException>(() => new AutoStarter(null, builder => builder.AddDebug()));
-            Assert.Throws<ArgumentNullException>(() => new AutoStarter("Test", null));
+            Assert.Throws<ArgumentException>(() => new AutoStarter(null));
         }
 
         [Test]
@@ -66,7 +64,7 @@ namespace Wikiled.Console.Tests.Arguments
 
         private AutoStarter CreateInstance()
         {
-            return new AutoStarter("Test", builder => builder.AddDebug());
+            return new AutoStarter("Test");
         }
     }
 }

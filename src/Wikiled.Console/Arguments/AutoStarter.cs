@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace Wikiled.Console.Arguments
@@ -12,23 +9,22 @@ namespace Wikiled.Console.Arguments
     {
         private readonly Dictionary<string, (ICommandConfig Config, ServiceDescriptor Service)> configs = new(StringComparer.OrdinalIgnoreCase);
 
-        private readonly Action<ILoggingBuilder> loggingBuilder;
-
-        public AutoStarter(string name, Action<ILoggingBuilder> loggingBuilder)
+        public AutoStarter(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 throw new ArgumentException("Value cannot be null or empty.", nameof(name));
             }
 
+            using var loggerFactory = LoggerFactory.Create(
+                loggingBuilder => loggingBuilder.SetMinimumLevel(LogLevel.Trace).AddConsole());
+            Logger = loggerFactory.CreateLogger("Main");
             Name = name;
-            this.loggingBuilder = loggingBuilder ?? throw new ArgumentNullException(nameof(loggingBuilder));
-            Logger  = LoggerFactory.Create(loggingBuilder).CreateLogger<AutoStarter>();
         }
 
         public string Name { get; }
 
-        public ILogger<AutoStarter> Logger { get; }
+        public ILogger Logger { get; }
 
         public AppConfig Config { get; } = new ();
 
@@ -88,7 +84,7 @@ namespace Wikiled.Console.Arguments
                     collection.Add(runDefinition.Service);
                     runDefinition.Config.Build(collection, context.Configuration);
                     collection.AddHostedService<ExecutionHost>();
-                }).ConfigureLogging(loggingBuilder);
+                });
         }
     }
 }
