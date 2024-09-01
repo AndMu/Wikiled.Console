@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Wikiled.Console.Arguments
+namespace Wikiled.Console.Arguments;
+
+public interface ICommandConfig
 {
-    public interface ICommandConfig
-    {
-        void Build(IServiceCollection services, IConfiguration config);
-    }
+    void Build(IServiceCollection services, IConfiguration config);
 }
