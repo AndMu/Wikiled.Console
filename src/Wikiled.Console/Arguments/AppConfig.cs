@@ -1,7 +1,6 @@
-﻿namespace Wikiled.Console.Arguments
+﻿namespace Wikiled.Console.Arguments;
+
+public class AppConfig
 {
-    public class AppConfig
-    {
-        public bool ValidateBeforeExecution { get; set; }
-    }
+    public bool ValidateBeforeExecution { get; set; }
 }

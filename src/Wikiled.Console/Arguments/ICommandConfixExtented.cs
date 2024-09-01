@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace Wikiled.Console.Arguments
+namespace Wikiled.Console.Arguments;
+
+public interface ICommandConfixExtented : ICommandConfig
 {
-    public interface ICommandConfixExtented : ICommandConfig
-    {
-        void Configure(IConfigurationBuilder builder);
-    }
+    void Configure(IConfigurationBuilder builder);
 }

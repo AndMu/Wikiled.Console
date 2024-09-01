@@ -2,14 +2,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Wikiled.Console.Arguments;
 
-namespace Wikiled.Console.Tests.Data
-{
-    public class ConfigOne : ICommandConfig
-    {
-        public string Data { get; set; }
+namespace Wikiled.Console.Tests.Data;
 
-        public void Build(IServiceCollection services, IConfiguration configuration)
-        {
-        }
+public class ConfigOne : ICommandConfig
+{
+    public string Data { get; set; }
+
+    public void Build(IServiceCollection services, IConfiguration configuration)
+    {
     }
 }

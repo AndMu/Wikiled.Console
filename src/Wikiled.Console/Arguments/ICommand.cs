@@ -1,10 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Wikiled.Console.Arguments
+namespace Wikiled.Console.Arguments;
+
+public interface ICommand
 {
-    public interface ICommand
-    {
-        Task Execute(CancellationToken token);
-    }
+    Task Execute(CancellationToken token);
 }

@@ -2,20 +2,19 @@
 using System.Threading.Tasks;
 using Wikiled.Console.Arguments;
 
-namespace Wikiled.Console.Tests.Data
+namespace Wikiled.Console.Tests.Data;
+
+public class SampleCommand : ICommand
 {
-    public class SampleCommand : ICommand
+    public SampleCommand(ConfigOne config)
     {
-        public SampleCommand(ConfigOne config)
-        {
-            Config = config;
-        }
+        Config = config;
+    }
 
-        public ConfigOne Config { get; }
+    public ConfigOne Config { get; }
 
-        public Task Execute(CancellationToken token)
-        {
-            return Task.CompletedTask;
-        }
+    public Task Execute(CancellationToken token)
+    {
+        return Task.CompletedTask;
     }
 }
