@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Wikiled.Console.Arguments;
+﻿namespace Wikiled.Console.Arguments;
 
 public class ExecutionContext
 {
